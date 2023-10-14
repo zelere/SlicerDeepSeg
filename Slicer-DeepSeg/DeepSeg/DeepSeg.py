@@ -213,6 +213,8 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.restoreDefaultsButton.connect("clicked(bool)", self.onRestoreDefaultsButton)
     self.cancelButton.connect("clicked(bool)", self.onCancelButton)
     self.applyButton.connect("clicked(bool)", self.onApplyButton)
+    self.ui.classificationButton.connect("clicked(bool)", self.onClassificationButton)
+
 
     # Make sure parameter node is initialized (needed for module reload)
     self.initializeParameterNode()
@@ -530,6 +532,9 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.currentStatusLabel.text = "Aborting"
     if self.logic:
       self.logic.abort = True
+  def onClassificationButton(self):
+     logging.info("Classication button pressed")
+     print("Classification")
 
   def onApplyButton(self):
     """

@@ -6,14 +6,17 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>322</width>
-    <height>521</height>
+    <width>318</width>
+    <height>638</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="sizeConstraint">
     <enum>QLayout::SetNoConstraint</enum>
    </property>
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_3"/>
+   </item>
    <item>
     <widget class="ctkCollapsibleButton" name="inputsCollapsibleButton">
      <property name="text">
@@ -324,40 +327,49 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <widget class="QPushButton" name="toggle3DButton">
-          <property name="text">
-           <string>Toggle 3D</string>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>../Icons/3d-cube.png</normaloff>../Icons/3d-cube.png</iconset>
-          </property>
-          <property name="checkable">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="editSegButton">
-          <property name="text">
-           <string>Edit Segmentation</string>
-          </property>
-          <property name="icon">
-           <iconset>
-            <normaloff>../Icons/next.png</normaloff>../Icons/next.png</iconset>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton">
-          <property name="text">
-           <string>Run Classification</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="QPushButton" name="toggle3DButton">
+        <property name="text">
+         <string>Toggle 3D</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../Icons/3d-cube.png</normaloff>../Icons/3d-cube.png</iconset>
+        </property>
+        <property name="checkable">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="editSegButton">
+        <property name="text">
+         <string>Edit Segmentation</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../Icons/next.png</normaloff>../Icons/next.png</iconset>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_2" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QPushButton" name="classificationButton">
+        <property name="text">
+         <string>Classification</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton">
+        <property name="text">
+         <string>PushButton</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
