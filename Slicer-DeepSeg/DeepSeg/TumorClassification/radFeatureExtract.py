@@ -1,10 +1,18 @@
 import os
 from radiomics import featureextractor
+import sys
 
-def extractFeatures(inputDict, outputPath, paramsPath):
-    print(paramsPath)
-    extractor = featureextractor(paramsPath)
-    #print(extractor)
+def extract_features(inputDict, outputPath, paramsPath):
+    print("ExtractFeautrures")
+
+    rel_path = os.path.relpath(paramsPath)
+
+
+
+
+
+    extractor = featureextractor.RadiomicsFeatureExtractor(rel_path)
+    print(extractor)
     for file in inputDict:
         print(file)
             # image_path = os.path.join(root, file)

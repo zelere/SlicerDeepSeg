@@ -64,6 +64,12 @@ from tensorflow.keras.utils import get_file
 
 # DeepSeg imports
 import DeepSegLib
+#RadiomicsClassification imports
+import TumorClassification
+
+import os
+from radiomics import featureextractor
+import sys
 
 # GPU handling (TF 2.X)
 if float(tf.__version__[:3]) >= 2.0:
@@ -126,6 +132,8 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self._updatingGUIFromParameterNode = False
 
     self.modelParameters = None
+
+    self.radiomicsParamsPath = "./Settings/Params.yml"
 
   def setup(self):
     """
@@ -534,7 +542,16 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.logic.abort = True
   def onClassificationButton(self):
      logging.info("Classication button pressed")
-     print("Classification")
+
+     self.radiomicsParamsPath=(r"C:\Users\User\Desktop\Slicer-DeepSeg-main (1)\Slicer-DeepSeg-main\Slicer-DeepSeg\DeepSeg\Settings\Params.yml" )
+     print( self.radiomicsParamsPath )
+     with open(self.radiomicsParamsPath, 'r') as file:
+         for f in file:
+           print(f)
+     print("TumorClassification")
+     inputDict = { "T1": "t1file", "T1ce": "t1cefile","T2": "t2file","flair": "flairfile"}
+     TumorClassification.radFeatureExtract.extractFeatures(inputDict=inputDict, paramsPath= self.radiomicsParamsPath, outputPath="" )
+
 
   def onApplyButton(self):
     """
