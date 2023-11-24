@@ -7,6 +7,7 @@ set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME}Lib
   ${MODULE_NAME}Lib/models.py
   ${MODULE_NAME}Lib/predict.py
+  TumorClassification/radFeatureExtract.py
   )
 
 set(MODULE_PYTHON_RESOURCES

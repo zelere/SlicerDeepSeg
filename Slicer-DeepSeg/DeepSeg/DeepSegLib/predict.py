@@ -21,7 +21,7 @@ def get_enhancing_tumor_mask(data):
 def postprocess_tumor(seg_data, tumor_type = "all", output_shape = (240, 240, 155)):
     # post-process the enhancing tumor region
     seg_enhancing = (seg_data == 3)
-    if np.sum(seg_enhancing) < 200:
+    if np.sum(seg_enhancing) < 200: ## ???????
         seg_data[seg_enhancing] = 1
     else:
         seg_data[seg_enhancing] = 4

@@ -64,6 +64,12 @@ from tensorflow.keras.utils import get_file
 
 # DeepSeg imports
 import DeepSegLib
+#RadiomicsClassification imports
+import TumorClassification
+
+import os
+from radiomics import featureextractor
+import sys
 
 # GPU handling (TF 2.X)
 if float(tf.__version__[:3]) >= 2.0:
@@ -105,6 +111,8 @@ See more information in <a href="https://github.com/razeineldin/Slicer-DeepSeg">
 This module has been done within the Research Group Computer Assisted Medicine (CaMed), Reutlingen University and the Health Robotics and Automation (HERA), Institute for Anthropomatics and Robotics (IAR), Karlsruhe Institute of Technology (KIT), Germany. The authors acknowledge support by the state of Baden-Württemberg through bwHPC. This work is partialy funded by the German Academic Exchange Service (DAAD) under Scholarship No. 91705803.
 
 """
+    logging.basicConfig(level=logging.INFO)
+
 
 #
 # DeepSegWidget
@@ -126,6 +134,8 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self._updatingGUIFromParameterNode = False
 
     self.modelParameters = None
+
+    self.radiomicsParamsPath = "./Settings/Params.yml"
 
   def setup(self):
     """
@@ -158,31 +168,20 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     hlayout.addWidget(self.currentStatusLabel)
     self.layout.addLayout(hlayout)
 
-    self.progress = qt.QProgressBar()
-    self.progress.setRange(0, 1000)
-    self.progress.setValue(0)
-    self.layout.addWidget(self.progress)
-    self.progress.hide()
+    self.ui.progressBar.setRange(0, 1000)
+    self.ui.progressBar.setValue(0)
+    self.ui.progressBar.hide()
 
     # Cancel/Restore Defaults/Apply row
-    self.restoreDefaultsButton = qt.QPushButton("Restore Defaults")
-    self.restoreDefaultsButton.toolTip = "Restore the default parameters."
-    self.restoreDefaultsButton.enabled = True
+    self.ui.restoreDefaultsButton.toolTip = "Restore the default parameters."
+    self.ui.restoreDefaultsButton.enabled = True
 
-    self.cancelButton = qt.QPushButton("Cancel")
-    self.cancelButton.toolTip = "Abort the algorithm."
-    self.cancelButton.enabled = False
+    self.ui.cancelButton.toolTip = "Abort the algorithm."
+    self.ui.cancelButton.enabled = False
 
-    self.applyButton = qt.QPushButton("Apply")
-    self.applyButton.toolTip = "Run the algorithm."
-    self.applyButton.enabled = False
 
-    hlayout = qt.QHBoxLayout()
-    hlayout.addWidget(self.restoreDefaultsButton)
-    hlayout.addStretch(1)
-    hlayout.addWidget(self.cancelButton)
-    hlayout.addWidget(self.applyButton)
-    self.layout.addLayout(hlayout)
+    self.ui.applyButton.toolTip = "Run the algorithm."
+    self.ui.applyButton.enabled = False
 
     self.onBackgroundSelector() # Change 3D View Background
 
@@ -207,12 +206,14 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.backgroundSelector.currentIndexChanged.connect(self.onBackgroundSelector)
 
     # Buttons
-    self.ui.toggle3DButton.connect("clicked(bool)", self.onToggle3DButton)
+    self.ui.toggle3DButton.connect("clicked()", self.onToggle3DButton)
     self.ui.editSegButton.connect("clicked(bool)", self.onEditSegButton)
 
-    self.restoreDefaultsButton.connect("clicked(bool)", self.onRestoreDefaultsButton)
-    self.cancelButton.connect("clicked(bool)", self.onCancelButton)
-    self.applyButton.connect("clicked(bool)", self.onApplyButton)
+    self.ui.restoreDefaultsButton.connect("clicked(bool)", self.onRestoreDefaultsButton)
+    self.ui.cancelButton.connect("clicked(bool)", self.onCancelButton)
+    self.ui.applyButton.connect("clicked(bool)", self.onApplyButton)
+    self.ui.classificationButton.connect("clicked(bool)", self.onClassificationButton)
+
 
     # Make sure parameter node is initialized (needed for module reload)
     self.initializeParameterNode()
@@ -310,18 +311,18 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     # Update processing buttons once the input MRI and tumor output volume exist
     if self._parameterNode.GetNodeReference("InputVolume1") and self._parameterNode.GetNodeReference("OutputVolume"):
-      self.cancelButton.toolTip = "Cancel the execution of the module"
-      self.cancelButton.enabled = True
+      self.ui.cancelButton.toolTip = "Cancel the execution of the module"
+      self.ui.cancelButton.enabled = True
 
-      self.applyButton.toolTip = "Compute output segmentation"
-      self.applyButton.enabled = True
+      self.ui.applyButton.toolTip = "Compute output segmentation"
+      self.ui.applyButton.enabled = True
 
     else:
-      self.cancelButton.toolTip = "Cancel the execution of the module"
-      self.cancelButton.enabled = False
+      self.ui.cancelButton.toolTip = "Cancel the execution of the module"
+      self.ui.cancelButton.enabled = False
 
-      self.applyButton.toolTip = "Select input and output volume nodes"
-      self.applyButton.enabled = False
+      self.ui.applyButton.toolTip = "Select input and output volume nodes"
+      self.ui.applyButton.enabled = False
 
     # Update the output buttons once the model finshes
     if self._parameterNode.GetParameter("Completed") == "True":
@@ -338,8 +339,8 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.ui.editSegButton.enabled = False
 
     # Restore defaults Button
-    self.restoreDefaultsButton.toolTip = "Reset to default parameters"
-    self.restoreDefaultsButton.enabled = True
+    self.ui.restoreDefaultsButton.toolTip = "Reset to default parameters"
+    self.ui.restoreDefaultsButton.enabled = True
 
     # All the GUI updates are done
     self._updatingGUIFromParameterNode = False
@@ -485,13 +486,18 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self._parameterNode.SetParameter("3DView", "off")
 
   def onToggle3DButton(self):
+    print('Toggle changed')
+
     if self._parameterNode.GetParameter("3DView") == "off":
-        # Show the nodes in the 3D view
-        self.show3DView()
+      # Show the nodes in the 3D view
+      self.ui.toggle3DButton.setText("Hide 3D View")
+      self.show3DView()
 
     elif self._parameterNode.GetParameter("3DView") == "on":
-        # Hide the nodes in the 3D view
-        self.hide3DView()
+      self.ui.toggle3DButton.setText("Show 3D View")
+
+      # Hide the nodes in the 3D view
+      self.hide3DView()
 
   def onEditSegButton(self):
     logging.info("Switching to Segment Editor")
@@ -530,6 +536,62 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.currentStatusLabel.text = "Aborting"
     if self.logic:
       self.logic.abort = True
+  def onClassificationButton(self):
+     logging.info("Classication button pressed")
+
+     self.radiomicsParamsPath=(r"C:\Users\User\Desktop\Slicer-DeepSeg-main (1)\Slicer-DeepSeg-main\Slicer-DeepSeg\DeepSeg\Settings\Params.yml" )
+     self.estimatorPath=(r"C:\Users\User\Downloads\b_e_RF_Selec_240.joblib")
+
+     print( self.radiomicsParamsPath )
+     with open(self.radiomicsParamsPath, 'r') as file:
+         for f in file:
+           print(f)
+     print("TumorClassification")
+
+     inputVolume1 = self.ui.FLAIRSelector.currentNode()
+     inputVolume2 = self.ui.T1Selector.currentNode()
+     inputVolume3 = self.ui.T1ceSelector.currentNode()
+     inputVolume4 = self.ui.T2Selector.currentNode()
+     outputVolume = self.ui.outputSelector.currentNode()
+
+     modalityCount = 4
+     imageShape = np.asarray(self._parameterNode.GetParameter("ImageShape").strip(")(").split(", "))
+     tumorType = self._parameterNode.GetParameter("TumorType")
+     inputShape = (int(imageShape[0]), int(imageShape[1]), int(imageShape[2]), modalityCount)
+
+     if modalityCount == 1:  # DeepSeg
+       image1 = slicer.util.arrayFromVolume(inputVolume1)
+       images = image1[..., np.newaxis]
+
+
+     else:  # 4 modalities (nnUNet)
+       # Get the numpy array(s) from the input node(s)
+       image1 = slicer.util.arrayFromVolume(inputVolume1)
+       image1 = np.swapaxes(image1, 0, 2)
+       image2 = slicer.util.arrayFromVolume(inputVolume2)
+       image2 = np.swapaxes(image2, 0, 2)
+
+       image3 = slicer.util.arrayFromVolume(inputVolume3)
+       image3 = np.swapaxes(image3, 0, 2)
+
+       image4 = slicer.util.arrayFromVolume(inputVolume4)
+       image4 = np.swapaxes(image4, 0, 2)
+
+     mask = slicer.util.arrayFromVolume(outputVolume)
+     mask = np.swapaxes(mask, 0, 2)
+
+     print("unique",np.unique(mask))
+
+     # Fix the data structure of nrrd (x,y,z) and numpy (z,y,x)
+
+     inputDict = { "flair": image1,"t1": image2, "t1ce": image3,"t2": image4 }
+     df = TumorClassification.radFeatureExtract.extract_features(modalities=inputDict,
+                                                            paramsPath= self.radiomicsParamsPath,
+                                                            outputPath="",
+                                                            mask = mask )
+     TumorClassification.radFeatureExtract.predict_classification(estimator_path= self.estimatorPath,
+                                                                  extracted_features=df)
+
 
   def onApplyButton(self):
     """
@@ -541,8 +603,8 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       logging.info("Pre-processing")
       self.currentStatusLabel.text = "Pre-processing"
       self._parameterNode.SetParameter("Status", "pre-processing")
-      self.progress.setValue(0)
-      self.progress.show()
+      self.ui.progressBar.setValue(0)
+      self.ui.progressBar.show()
 
       inputVolume1 = self.ui.FLAIRSelector.currentNode()
       inputVolume2 = self.ui.T1Selector.currentNode()
@@ -586,7 +648,7 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       #slicer.util.updateVolumeFromArray(outputVolume, imagePreprocessed1)
       stopTime = time.time()
       logging.info("Pre-processing data completed in {0:.2f} seconds".format(stopTime-startTime))
-      self.progress.setValue(100)
+      self.ui.progressBar.setValue(100)
       startTime = time.time()
 
       self.currentStatusLabel.text = "Downloading"
@@ -620,11 +682,11 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       trainedModel.load_weights(modelPath)
       stopTime = time.time()
       logging.info("Getting pre-trained model completed in {0:.2f} seconds".format(stopTime-startTime))
-      self.progress.setValue(400)
+      self.ui.progressBar.setValue(400)
 
       """if self.logic.abort:
-        self.progress.setValue(0)
-        self.progress.hide()
+        self.ui.progressBar.setValue(0)
+        self.ui.progressBar.hide()
         self.currentStatusLabel.text = "Idle"
         return 0"""
 
@@ -644,7 +706,7 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       logging.info("Prediction completed in {0:.2f} seconds".format(stopTime-startTime))
       self.currentStatusLabel.text = "Completed"
       self._parameterNode.SetParameter("Completed", "True")
-      self.progress.setValue(1000)
+      self.ui.progressBar.setValue(1000)
 
       startTime = time.time()
 
@@ -658,7 +720,7 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       outputVolume.SetIJKToRASDirectionMatrix(ijkToRasDirections)
 
       # View the segmentation output in slicer
-      slicer.util.setSliceViewerLayers(background=inputVolume1)
+      slicer.util.setSliceViewerLayers(background=inputVolume2)
       slicer.util.setSliceViewerLayers(foreground=outputVolume)
       slicer.util.setSliceViewerLayers(foregroundOpacity=0.5)
 
@@ -675,8 +737,8 @@ class DeepSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
       stopTime = time.time()
       logging.info("Visualization completed in {0:.2f} seconds".format(stopTime-startTime))
-      self.progress.setValue(0)
-      self.progress.hide()
+      self.ui.progressBar.setValue(0)
+      self.ui.progressBar.hide()
 
     except Exception as e:
       self.currentStatusLabel.text = "Exception"
