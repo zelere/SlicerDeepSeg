@@ -14,6 +14,15 @@ First, download the 3D Slicer from here. Select the version that corresponds to 
 
 Steps 2-4 are visualized on [Developing Slicer Extensions](https://docs.google.com/presentation/d/1JXIfs0rAM7DwZAho57Jqz14MRn2BIMrjB17Uj_7Yztc/edit#slide=id.g420896289_061) slides 8 to 10.
 
+Please adjust the file paths in Slicer-DeepSeg/DeepSeg/DeepSeg.py on line 631 and 632 to match the location on your computer. This feature is still under development.
+
+```
+## replace these links based on your directory location
+self.radiomicsParamsPath=(r"C:\Users\User\Desktop\Slicer-DeepSeg-main (1)\Slicer-DeepSeg-main\Slicer-DeepSeg\DeepSeg\Settings\Params.yml" )
+self.estimatorPath=(r"C:\Users\User\Desktop\Slicer-DeepSeg-main (1)\Slicer-DeepSeg-main\Slicer-DeepSeg\DeepSeg\TumorClassification\b_e_RF_Selec_240.joblib")
+```
+
+
 ## Use cases 
 ### Classification using automated segmentation
 - set input FLAIR, T1, T1ce and T2 volumes
