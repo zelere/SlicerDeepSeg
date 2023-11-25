@@ -2,10 +2,7 @@
 
 ## Purpose 
 The project aims to support the segmentation and classification process of brain tumors.
-
-## 
-
-The Slicer extension is capable of calculating radiomics features based on automatically or manually segmented MRI scans, and classifying the grade of the brain tumor. For automated segmentation nnU-net [32] is used, which performed among the best solutions in the BraTS2021 competition.  
+This Slicer extension is capable of calculating radiomics features based on automatically or manually segmented MRI scans, and classifying the grade of the brain tumor. For automated segmentation nnU-net is used, which performed among the best solutions in the BraTS2021 competition.  
 
 ## Installation
 First, download the 3D Slicer from here. Select the version that corresponds to your operating system.
@@ -40,8 +37,7 @@ Steps 2-4 are visualized on [Developing Slicer Extensions](https://docs.google.c
 - set input FLAIR, T1, T1ce and T2 volumes
 - select Output `Tumor segmentation` and `Tumor Volume`, where the segmentation results will be stored
 - Press  the `Segmentation` button
-
-- 
+ 
 
 ![GUI]( https://github.com/zelere/SlicerDeepSeg/blob/master/3D%20Slicer%205.2.2%2024_11_2023%2001_34_20.png )
 ## Acknowledgements
